@@ -2,7 +2,7 @@ library(shiny)
 library(shinythemes)
 library(shinyBS)
 library(markdown)
-library(networkD3)
+library(visNetwork)
 shinyUI(fluidPage(
   
   theme = shinytheme("spacelab"),
@@ -26,13 +26,14 @@ shinyUI(fluidPage(
         condition = "output.loaded == 1",
         selectInput("source", "Network Source",
                     choices = c("McRae Feature Norms" = "MFN", 
-                                "Word2Vec Model" = "W2V"), 
-                                # "Picture Book Model" = "PB"),
+                                "Word2Vec Model" = "W2V", 
+                                 "Phonological Distance" = "Phon"),
                     selected = "W2V"),
+        uiOutput("language"),
         selectInput("instrument", "CDI Instrument",
                        choices = c("Words & Sentences" = "WS", 
                                    "Words & Gestures" = "WG"),
-                       selected = "production"),
+                       selected = "WG"),
         uiOutput("measure"),
         uiOutput("assoc_control"),
         sliderInput("age", "Age of Acquisition",
@@ -58,8 +59,8 @@ shinyUI(fluidPage(
                  ".shiny-output-error:before { visibility: hidden; }"),
       conditionalPanel(
         condition = "output.loaded == 1",
-        forceNetworkOutput("network")
-        # visNetworkOutput("network", height = "800px")
+        #forceNetworkOutput("network")
+         visNetworkOutput("network", height = "800px")
         
       )
     )

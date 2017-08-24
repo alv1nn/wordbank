@@ -11,20 +11,24 @@ library(langcog)
 library(wordbankr)
 library(stringr)
 library(networkD3)
+library(feather)
 
 theme_set(theme_mikabr(base_size = 14))
 font <- theme_mikabr()$text$family
 
 ######## DATA PROCESSING
-c_assocs <- read_csv(file = "assocs/c_assoc_mat.csv") 
-p_assocs <- read_csv(file = "assocs/p_assoc_mat.csv")
-all_assocs <- read_csv(file = "assocs/assoc_mat.csv")
+
+mcrae <- read_feather("assocs/mcrae.feather")
+phons <- read_feather("assocs/phons.feather")
+uni_lemmas <- read_feather("assocs/uni_lemmas.feather")
+
 w2v_assocs<- read_csv(file= 'assocs/w2v_assocs.csv')
-# pb_assocs<- read_csv(file = 'assocs/books_word2vec.csv')
 
 ws_aoas <- read_csv("aoas/eng_ws_production_aoas.csv") 
 wg_comp_aoas <- read_csv("aoas/eng_wg_production_aoas.csv") 
 wg_prod_aoas <- read_csv("aoas/eng_wg_comprehension_aoas.csv") 
+
+
 
 ###### SHINY SERVER ###### 
 
@@ -46,6 +50,24 @@ shinyServer(function(input, output) {
     selectInput("measure", "AoA measure",
                    choices = choices,
                    selected = "production")
+  })
+  
+  
+  ########## GET MEASURE
+  output$language <- renderUI({
+    req(input$source) 
+    
+    if (input$source == "W2V") {
+      choices <- c("English (American)")
+    } else if(input$source == "MFN") {
+      choices <- unique(uni_lemmas$language)
+    } else if(input$source == "Phon") {
+      choices <- unique(phons$language)
+    }
+    
+    selectInput("language", "Language",
+                choices = choices,
+                selected = "English (American)")
   })
   
   
@@ -82,6 +104,12 @@ shinyServer(function(input, output) {
       start_point <- 2
       low_point <- 1
       step_size <- 1
+    } else if (input$source == "Phon"){
+      title <- "Phonetic Distance"
+      high_point <- 5
+      start_point <- 2
+      low_point <- 1
+      step_size <- 1
     }
   
     sliderInput("cutoff", label=title,
@@ -101,33 +129,44 @@ shinyServer(function(input, output) {
     }else if (input$instrument == "WG" & input$measure == "production" ) {
       raw_aoas <- wg_prod_aoas
     }
-     
-    if(input$source == "MFN") {
-      raw_aoas %>%
-        rename(label = definition) %>% 
-        mutate(aoa = round(aoa))  
-    }
-    else {
-      raw_aoas %>%
-        rename(label = uni_lemma) %>% 
-        mutate(aoa = round(aoa))  
-    }
+         
+    raw_aoas %>%
+      rename(label = uni_lemma) %>% 
+      mutate(aoa = round(aoa))  
   })  
   
   ########## READ IN ASSOCIATIONS
   assoc_mat <- reactive({
-    if (input$source == "MFR") {
-      assocs <- all_assocs
-    } else if (input$source == "W2V") {
-        assocs <- w2v_assocs
-    } else if (input$source == "PB") {
-      assocs <- pb_assocs
-    } else if (input$assocs == "conceptual") {
-      assocs <- c_assocs 
-    } else if (input$assocs == "perceptual") {
-      assocs <- p_assocs
-    } else if (input$assocs == "all") {
-      assocs <- all_assocs
+    req(input$source)
+    req(input$language)
+    req(input$assocs)
+    
+    if(input$source == "W2V") {
+      assocs <- w2v_assocs
+    }
+    else if(input$source == "MFN") {
+      if (input$assocs == "all") {
+          assocs <- mcrae %>% 
+            select(U1, U2, McRae_all) %>% 
+            spread(U2, McRae_all) %>%
+            rename(in_node = U1)
+      } else if (input$assocs == "perceptual") {
+          assocs <- mcrae %>% 
+            select(U1, U2, McRae_p) %>% 
+            spread(U2, McRae_all) %>%
+            rename(in_node = U1)
+      } else {
+          assocs <- mcrae %>% 
+            select(U1, U2, McRae_c) %>% 
+            spread(U2, McRae_all)  %>%
+            rename(in_node = U1)
+      }
+    } else if (input$source == "Phon") {
+      assocs <- phons %>%
+        filter(language == input$language) %>%
+        select(W1, W2, PhonoDist) %>%
+        spread(W2,PhonoDist) %>%
+        rename(in_node = W1)
     }
     
     assoc_mat <- as.matrix(select(assocs, -in_node))
@@ -177,12 +216,16 @@ shinyServer(function(input, output) {
   ########## FILTER EDGES 
   assoc_edges <- reactive({
     req(input$weighted)
+    req(input$cutoff)
+    req(input$source)
     
     scaling = ifelse(input$source == "W2V", 4, 1)
     
     edges <- assoc_edge_data() %>%
-      mutate(width = scaling*width) %>%
-      filter(width >= (scaling*input$cutoff)) 
+      mutate(width = scaling*width) 
+    
+    if(input$source == "Phon") edges <- filter(edges, width <= (scaling*input$cutoff))
+    else edges <- filter(edges, width >= (scaling*input$cutoff)) 
     
     if (input$weighted == "TRUE") {
       edges
@@ -193,26 +236,26 @@ shinyServer(function(input, output) {
   })
   
   ########## RENDER GRAPH
-  output$network <- renderForceNetwork({
-    forceNetwork(Links = assoc_edges(), Nodes = assoc_nodes(), Source = "in_node",
-                 Target = "out_node", Value = "width", NodeID = "label",
-                 linkWidth = JS("function(d) { return d.value; }"),
-                 Group = "group", opacity = .8, zoom = TRUE, opacityNoHover = .8,
-                 legend = input$group != "identity",
-                 linkColour = "#cccccc", fontSize = 12,
-                 colourScale = ifelse(length(unique(assoc_nodes()$group)) > 10, 
-                                      JS("d3.scale.category20()"),
-                                      JS("d3.scale.category10()")))
-  })
-  
-  # output$network <- renderVisNetwork({
-  #   visNetwork(assoc_nodes(), 
-  #              rename(assoc_edges(), from = in_node, to = out_node), 
-  #              width = "100%", height="100%") %>%
-  #     visPhysics(stabilization = TRUE) %>%
-  #    visEdges(smooth = FALSE, selfReferenceSize= FALSE)
-  #   
+  # output$network <- renderForceNetwork({
+  #   forceNetwork(Links = assoc_edges(), Nodes = assoc_nodes(), Source = "in_node",
+  #                Target = "out_node", Value = "width", NodeID = "label",
+  #                linkWidth = JS("function(d) { return d.value; }"),
+  #                Group = "group", opacity = .8, zoom = TRUE, opacityNoHover = .8,
+  #                legend = input$group != "identity",
+  #                linkColour = "#cccccc", fontSize = 12)#,
+  #                # colourScale = ifelse(length(unique(assoc_nodes()$group)) > 10, 
+  #                #                      JS("d3.scale.category20()"),
+  #                #                      JS("d3.scale.category10()")))
   # })
+  
+  output$network <- renderVisNetwork({
+    visNetwork(assoc_nodes(),
+               rename(assoc_edges(), from = in_node, to = out_node),
+               width = "100%", height="100%") %>%
+      visPhysics(stabilization = TRUE) %>%
+     visEdges(smooth = FALSE, selfReferenceSize= FALSE)
+
+  })
   
   output$loaded <- reactive(1)
 })
