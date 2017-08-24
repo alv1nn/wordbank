@@ -11,7 +11,7 @@ shinyUI(fluidPage(
   
   br(),
   bsCollapse(id = "doc", open = "title",
-             bsCollapsePanel(title = h3("Semantic Networks"),
+             bsCollapsePanel(title = h4("Semantic Networks"),
                              includeMarkdown("docs/description.md"),
                              value = "title",
                              style = "default")),
@@ -41,7 +41,7 @@ shinyUI(fluidPage(
         sliderInput("age", "Age of Acquisition",
                     min = 6, 
                     max = 36, 
-                    value = 20, step = 1),
+                    value = 15, step = 1),
         uiOutput('cutoff'),
         selectizeInput("weighted", "Should graph edges be weighted?",
                     choices = c("Yes" = TRUE, 
@@ -62,7 +62,7 @@ shinyUI(fluidPage(
       conditionalPanel(
         condition = "output.loaded == 1",
         #forceNetworkOutput("network")
-         visNetworkOutput("network", height = "800px")
+         visNetworkOutput("network", height = "650px")
         
       )
     )

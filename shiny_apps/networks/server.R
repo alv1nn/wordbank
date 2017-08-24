@@ -3,14 +3,14 @@
 # - cross-linguisic using unilemmas
 
 library(shiny)
-library(readr)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
 library(langcog)
 library(wordbankr)
 library(stringr)
 library(networkD3)
+library(igraph)
+library(visNetwork)
+library(RColorBrewer)
+library(tidyverse)
 library(feather)
 
 theme_set(theme_mikabr(base_size = 14))
@@ -28,6 +28,20 @@ ws_aoas <- read_csv("aoas/eng_ws_production_aoas.csv")
 wg_comp_aoas <- read_csv("aoas/eng_wg_production_aoas.csv") 
 wg_prod_aoas <- read_csv("aoas/eng_wg_comprehension_aoas.csv") 
 
+######### Constants
+
+## lexical class colors
+lex_class_col <- tibble(
+  group = c("nouns", "other", "verbs", "adjectives", "function_words"),
+  color = c('#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00')
+)
+
+## lexical categories colors 
+categories <- ws_aoas %>% pull(category) %>% unique()
+lex_cat_col <- tibble(
+  group = categories,
+  color = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928', '#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69','#fccde5','#d9d9d9','#bc80bd','#ccebc5')
+)
 
 
 ###### SHINY SERVER ###### 
@@ -139,7 +153,10 @@ shinyServer(function(input, output) {
   assoc_mat <- reactive({
     req(input$source)
     req(input$language)
-    req(input$assocs)
+    
+    if(input$source != "W2V") {
+      req(input$assocs)  
+    }
     
     if(input$source == "W2V") {
       assocs <- w2v_assocs
@@ -188,7 +205,22 @@ shinyServer(function(input, output) {
       mutate(id = 0:(n()-1), 
              identity = 1) %>%
       select_("label", "id", input$group) %>%
-      rename_("group" = input$group)
+      rename_("group" = input$group) %>% 
+      mutate(value = 2) 
+      
+    #### ADD COLORS BASED ON GROUPING VARIABLE
+    
+    ## add colors information to the nodes
+    if(input$group == "lexical_class") {
+      assoc_nodes <- assoc_nodes %>% left_join(., lex_class_col, by = "group")
+    } else if (input$group == "category") {
+      assoc_nodes <- assoc_nodes %>% left_join(., lex_cat_col, by = "group")
+    } else {
+      assoc_nodes <- assoc_nodes %>% mutate(color = "dodgerblue")
+    }
+    
+    print(assoc_nodes)
+    
   })
   
   ########## PARSE EDGE DATA
@@ -235,7 +267,32 @@ shinyServer(function(input, output) {
     
   })
   
+  
+  lnodes <- reactive({
+    req(input$group)
+    ## create custom mappings for the legend
+    if(input$group == "lexical_class") {
+      nodes_legend <- lex_class_col %>% 
+        rename(label = group) %>% 
+        mutate(shape = "ellipse")
+      print(nodes_legend)
+    } else if (input$group == "category") {
+      nodes_legend <- lex_cat_col %>% 
+        rename(label = group) %>% 
+        mutate(shape = "ellipse")
+      
+    } else {
+      nodes_legend <- lex_cat_col %>%
+        rename(label = group) %>%
+        mutate(color = "dodgerblue",
+               shape = "ellipse",
+               label = "word")
+    }
+  })
+  
+  
   ########## RENDER GRAPH
+  
   # output$network <- renderForceNetwork({
   #   forceNetwork(Links = assoc_edges(), Nodes = assoc_nodes(), Source = "in_node",
   #                Target = "out_node", Value = "width", NodeID = "label",
@@ -251,10 +308,15 @@ shinyServer(function(input, output) {
   output$network <- renderVisNetwork({
     visNetwork(assoc_nodes(),
                rename(assoc_edges(), from = in_node, to = out_node),
-               width = "100%", height="100%") %>%
-      visPhysics(stabilization = TRUE) %>%
-     visEdges(smooth = FALSE, selfReferenceSize= FALSE)
-
+               width = "100%", height = "100%") %>%
+      visIgraphLayout(layout = "layout_nicely", randomSeed = 123,
+                      physics = F) %>%
+      visEdges(color = "darkgrey") %>%
+      visNodes(font = list(size = 30), size = 20) %>%
+      visOptions(highlightNearest = list(enabled = T, degree = 2, hover = F),
+                  selectedBy = "group") %>% 
+      visLegend(width = 0.3, position = "left", 
+                addNodes = lnodes(), useGroups = F)
   })
   
   output$loaded <- reactive(1)
