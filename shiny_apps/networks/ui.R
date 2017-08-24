@@ -2,7 +2,9 @@ library(shiny)
 library(shinythemes)
 library(shinyBS)
 library(markdown)
+library(networkD3)
 library(visNetwork)
+
 shinyUI(fluidPage(
   
   theme = shinytheme("spacelab"),
