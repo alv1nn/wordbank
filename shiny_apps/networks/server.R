@@ -22,11 +22,17 @@ mcrae <- read_feather("assocs/mcrae.feather")
 phons <- read_feather("assocs/phons.feather")
 uni_lemmas <- read_feather("assocs/uni_lemmas.feather")
 
-w2v_assocs<- read_csv(file= 'assocs/w2v_assocs.csv')
+#w2v_assocs<- read_csv(file= 'assocs/w2v_assocs.csv')
+w2v <- read_feather("assocs/w2v.feather")
 
-ws_aoas <- read_csv("aoas/eng_ws_production_aoas.csv") 
-wg_comp_aoas <- read_csv("aoas/eng_wg_production_aoas.csv") 
-wg_prod_aoas <- read_csv("aoas/eng_wg_comprehension_aoas.csv") 
+aoas <- read_feather("aoas/all_aoas.feather") %>%
+  mutate(measure = if_else(measure == "understands", "comprehension", "production"))
+
+
+instruments <- distinct(aoas, language, form)
+#ws_aoas <- read_csv("aoas/eng_ws_production_aoas.csv") 
+#wg_comp_aoas <- read_csv("aoas/eng_wg_production_aoas.csv") 
+#wg_prod_aoas <- read_csv("aoas/eng_wg_comprehension_aoas.csv") 
 
 ######### Constants
 
@@ -37,10 +43,18 @@ lex_class_col <- tibble(
 )
 
 ## lexical categories colors 
-categories <- ws_aoas %>% pull(category) %>% unique()
+categories <- aoas %>% 
+  filter(!is.na(category)) %>%
+           pull(category) %>% unique()
+         
 lex_cat_col <- tibble(
   group = categories,
-  color = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928', '#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69','#fccde5','#d9d9d9','#bc80bd','#ccebc5')
+  color = c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
+            '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928',
+            '#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462',
+            '#b3de69','#fccde5','#d9d9d9','#bc80bd','#ccebc5',
+            '#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c',
+            '#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928')
 )
 
 
@@ -52,18 +66,30 @@ shinyServer(function(input, output) {
   
   ########## GET MEASURE
   output$measure <- renderUI({
+    
+    req(input$language)
     req(input$instrument) 
     
-    if (input$instrument == "WS") {
-      choices <- c("Production" = "production")
-    } else if (input$instrument == "WG") {
-      choices <- c("Comprehension" = "comprehension", 
-        "Production" = "production")
+    
+    meas_choices <- forms %>%
+      filter(language == input$language, form == input$instrument) %>%
+      pull(measure)
+    
+    if(length(meas_choices) == 2) {
+      choices <- c("Production" = "production", 
+                   "Comprehension" = "comprehension")
+      selected <- "comprehension"
+    } else if(meas_choices == "production") {
+      choices <-  c("Production" = "production")
+      selected <- "production"
+    } else if(meas_choices == "comprehension") {
+      choices <-  c("Comprehension" = "comprehension")
+      selected <- "comprehension"
     }
     
     selectInput("measure", "AoA measure",
                    choices = choices,
-                   selected = "production")
+                   selected = selected)
   })
   
   
@@ -72,7 +98,7 @@ shinyServer(function(input, output) {
     req(input$source) 
     
     if (input$source == "W2V") {
-      choices <- c("English (American)")
+      choices <- unique(w2v$language)
     } else if(input$source == "MFN") {
       choices <- unique(uni_lemmas$language)
     } else if(input$source == "Phon") {
@@ -84,6 +110,31 @@ shinyServer(function(input, output) {
                 selected = "English (American)")
   })
   
+  ########## GET MEASURE
+  output$instrument <- renderUI({
+    req(input$language)
+    
+    lang_choices <- instruments %>%
+      filter(language == input$language) %>%
+      pull(form)
+    
+    
+    if(length(lang_choices) == 2) {
+      choices <- c("Words & Sentences" = "WS", 
+                   "Words & Gestures" = "WG")
+      selected <- "WG"
+    } else if(lang_choices == "WS") {
+      choices <-  c("Words & Sentences" = "WS")
+      selected <- "WS"
+    } else if(lang_choices == "WG") {
+      choices <-  c("Words & Gestures" = "WG")
+      selected <- "WG"
+    }
+    
+    selectInput("instrument", "Instrument",
+                choices = choices,
+                selected = selected)
+  })
   
   output$assoc_control <- renderUI({
     req(input$source)
@@ -135,18 +186,22 @@ shinyServer(function(input, output) {
   aoa_data <- reactive({
     
     req(input$source)
+    req(input$language)
+    req(input$instrument)
     
-    if (input$instrument  == "WS") {
-      raw_aoas <- ws_aoas
-    } else if (input$instrument == "WG" & input$measure == "comprehension" ) {
-      raw_aoas <- wg_comp_aoas
-    }else if (input$instrument == "WG" & input$measure == "production" ) {
-      raw_aoas <- wg_prod_aoas
-    }
-         
-    raw_aoas %>%
-      rename(label = uni_lemma) %>% 
-      mutate(aoa = round(aoa))  
+    aoas <- aoas %>%
+      filter(language == input$language,
+             measure == input$measure,
+             form == input$instrument) %>%
+      mutate(aoa = round(aoa))
+
+    print(aoas)
+    
+    if(input$source == "MFN")
+      rename(aoas, label = uni_lemma)
+    else
+      rename(aoas, label = definition)
+
   })  
   
   ########## READ IN ASSOCIATIONS
@@ -154,12 +209,16 @@ shinyServer(function(input, output) {
     req(input$source)
     req(input$language)
     
-    if(input$source != "W2V") {
+    if(input$source == "MFN") {
       req(input$assocs)  
     }
     
     if(input$source == "W2V") {
-      assocs <- w2v_assocs
+      assocs <- w2v %>% 
+        filter(language == input$language) %>%
+        select(W1, W2, CosSim) %>% 
+        spread(W2, CosSim) %>%
+        rename(in_node = W1)
     }
     else if(input$source == "MFN") {
       if (input$assocs == "all") {
@@ -219,8 +278,6 @@ shinyServer(function(input, output) {
       assoc_nodes <- assoc_nodes %>% mutate(color = "dodgerblue")
     }
     
-    print(assoc_nodes)
-    
   })
   
   ########## PARSE EDGE DATA
@@ -275,7 +332,6 @@ shinyServer(function(input, output) {
       nodes_legend <- lex_class_col %>% 
         rename(label = group) %>% 
         mutate(shape = "ellipse")
-      print(nodes_legend)
     } else if (input$group == "category") {
       nodes_legend <- lex_cat_col %>% 
         rename(label = group) %>% 

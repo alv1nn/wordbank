@@ -80,6 +80,6 @@ w2v_out <- w2v %>%
   mutate(language = "English (American)") %>%
   select(language, W1, W2, CosSim)
 
-%>%
+write_feather(w2v_out, "assocs/w2v.feather")
   
 

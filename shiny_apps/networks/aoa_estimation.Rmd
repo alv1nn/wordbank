@@ -1,0 +1,166 @@
+---
+title: Estimating words' age of acquisition in WS
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    highlight: tango
+    theme: spacelab
+---
+
+```{r setup, echo = FALSE}
+library(knitr)
+opts_chunk$set(message = FALSE, warning = FALSE, cache = TRUE)
+```
+
+```{r, cache = FALSE}
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(readr)
+library(ggplot2)
+library(langcog)
+library(wordbankr)
+library(boot)
+library(lazyeval)
+library(robustbase)
+library(stringr)
+library(feather)
+```
+
+Connect to the Wordbank database and pull out the raw data.
+```{r, raw_data}
+
+
+forms <- get_instruments() %>%
+  filter(form %in% c("WG", "WS")) %>%
+  select(language, form) %>%
+  mutate(produces = form =="WG" | form == "WS",
+         understands = form == "WG") %>%
+  gather(measure, value, produces, understands) %>%
+  filter(value) %>%
+  select(-value) %>%
+  filter(language != "British Sign Language") 
+
+summary_data <- function(in_lang, in_form, in_measure) {
+    
+  print(in_lang)
+  
+  print(in_form)
+  
+  admins <- get_administration_data(language = in_lang, 
+                                    form = in_form) %>%
+    select(data_id, age) %>%
+    filter(!is.na(age))
+
+  
+  items <- get_item_data(language = in_lang, 
+                                    form = in_form) %>%
+    mutate(num_item_id = as.numeric(substr(item_id, 6, nchar(item_id))),
+           definition = tolower(definition))
+  
+  words <- items %>%
+    filter(type == "word") %>%
+    mutate(num_item_id = as.numeric(str_replace(item_id, "item_", ""))) 
+  
+  
+  instrument_data <- get_instrument_data(language = in_lang,
+                        form = in_form,
+                        items = items$item_id,
+                        administrations = admins) 
+  
+  raw_data <- instrument_data %>%
+      mutate(knows = !is.na(value) & value == in_measure) %>%
+      select(-value) %>%
+      gather(measure, value, knows) 
+  
+  raw_data %>%
+    group_by(num_item_id, age) %>%
+    summarise(num_true = sum(value, na.rm = TRUE),
+              num_false = n() - num_true,
+              prop = mean(value, na.rm = TRUE)) %>%
+    left_join(words) %>%
+    filter(!is.na(definition)) %>%
+    mutate(measure = in_measure) %>%
+    ungroup() %>% 
+    select(age, num_true, num_false, definition, category, lexical_category, 
+           lexical_class, uni_lemma, language, form, measure)
+  
+}
+
+```
+
+Fit models to predict each item's age of acquisition.
+
+```{r, aoa_data}
+fit_inst_measure_uni <- function(d) {
+  tryCatch({
+    model <- glmrob(cbind(num_true, num_false) ~ age, family = "binomial",
+                    data = d, y = TRUE)
+    fit <- predict(model, newdata = data.frame(age = d$age), se.fit = TRUE)
+    aoa <- -model$coefficients[["(Intercept)"]] / model$coefficients[["age"]]
+    fit_prop <- inv.logit(fit$fit)
+    fit_se <- fit$se.fit
+  }, error = function(e) {
+    aoa <- fit <- fit_prop <- fit_se <- NA
+  })
+  
+  #print(d$definition[1])
+  data.frame(age = d$age, 
+             fit_prop = fit_prop, 
+             fit_se = fit_se,
+             aoa = aoa, 
+             definition = d$definition, 
+             category = d$category, 
+             lexical_category = d$lexical_category, 
+             lexical_class = d$lexical_class,
+             uni_lemma = d$uni_lemma,
+             language = d$language,
+             form = d$form,
+             measure = d$measure)
+}
+```
+
+Get AOAS
+```{r}
+aoa_data <- function(in_lang, in_form, in_measure) {
+  print(paste(in_lang, in_form, in_measure, sep = " "))
+
+  aoas <- summary_data(in_lang, in_form, in_measure) %>%
+    split(paste(.$definition, .$lexical_category, .$lexical_class, 
+                .$category, .$uni_lemma)) %>%
+    map_df(fit_inst_measure_uni) %>%
+    group_by(definition) %>%
+    slice(1) %>%
+    ungroup() %>%
+    select(language, form, measure, definition, uni_lemma, aoa, category, 
+         lexical_category, lexical_class) 
+  
+  write_feather(aoas, paste0("assocs/",in_lang,"_",in_form,"_",in_measure,".feather"))
+}
+```
+Now extract AOAs.
+
+```{r}
+
+all_aoas <- walk(1:nrow(forms),
+                function(row) {
+                  print(row)
+                  aoa_data(as.character(forms[row,"language"]), 
+                                       as.character(forms[row, "form"]),
+                                       as.character(forms[row, "measure"]))
+                  walk(dbListConnections(MySQL()), dbDisconnect)})
+  
+```
+
+Combine feathers (wordbankr was struggling with open connections)
+
+```{r}
+files <- list.files("assocs/aoas/", "*.feather", full.names = TRUE)
+
+feathers <- map(files, read_feather) %>%
+  bind_rows()
+
+write_feather(feathers, "aoas/all_aoas.feather")
+```
+
+
