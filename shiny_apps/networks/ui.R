@@ -5,66 +5,67 @@ library(markdown)
 library(networkD3)
 library(visNetwork)
 
-shinyUI(fluidPage(
-  
-  theme = shinytheme("spacelab"),
-  
-  br(),
-  bsCollapse(id = "doc", open = "title",
-             bsCollapsePanel(title = h4("Semantic Networks"),
-                             includeMarkdown("docs/description.md"),
-                             value = "title",
-                             style = "default")),
-  
-  sidebarLayout(
-    sidebarPanel(
-      width = 3,
-      conditionalPanel(
-        condition = "output.loaded != 1",
-        h4("Loading...")
-      ),
-      
-      conditionalPanel(
-        condition = "output.loaded == 1",
-        selectInput("source", "Network Source",
-                    choices = c("McRae Feature Norms" = "MFN", 
-                                "Word2Vec Model" = "W2V", 
-                                 "Phonological Distance" = "Phon"),
-                    selected = "W2V"),
-        uiOutput("language"),
-        selectInput("instrument", "CDI Instrument",
-                       choices = c("Words & Sentences" = "WS", 
-                                   "Words & Gestures" = "WG"),
-                       selected = "WG"),
-        uiOutput("measure"),
-        uiOutput("assoc_control"),
-        sliderInput("age", "Age of Acquisition",
-                    min = 6, 
-                    max = 36, 
-                    value = 15, step = 1),
-        uiOutput('cutoff'),
-        selectizeInput("weighted", "Should graph edges be weighted?",
-                    choices = c("Yes" = TRUE, 
-                                "No" = FALSE),
-                    selected = TRUE),
-        selectizeInput("group", "Grouping variable",
-                       choices = c("None" = "identity", 
-                                   "CDI category" = "category",
-                                   "Lexical class" = "lexical_class"),
-                       selected = "lexical_class"),
-        width = 3)),
+shinyUI(
+  fluidPage(
     
-    mainPanel(
-      width = 9,
-      tags$style(type = "text/css",
-                 ".shiny-output-error { visibility: hidden; }",
-                 ".shiny-output-error:before { visibility: hidden; }"),
-      conditionalPanel(
-        condition = "output.loaded == 1",
-        #forceNetworkOutput("network")
-         visNetworkOutput("network", height = "650px")
+    theme = shinytheme("spacelab"),
+    tags$style(type='text/css', ".selectize-input { font-size: 12px; line-height: 12px;} .selectize-dropdown { font-size: 12px; line-height: 12px; }"),
+    #br(),
+    bsCollapse(id = "doc", open = "title",
+               bsCollapsePanel(title = h4("Semantic Networks"),
+                               #includeMarkdown("docs/description.md"),
+                               value = "title",
+                               style = "default")),
+    
+    sidebarLayout(
+      sidebarPanel(
+        width = 3,
+        conditionalPanel(
+          condition = "output.loaded != 1",
+          h5("Loading...")
+        ),
         
+        conditionalPanel(
+          condition = "output.loaded == 1",
+          selectInput("source", "Network Source",
+                      choices = c("McRae Feature Norms" = "MFN", 
+                                  "Word2Vec Model" = "W2V", 
+                                  "Phonological Distance" = "Phon"),
+                      selected = "W2V"),
+          uiOutput("language"),
+          selectInput("instrument", "CDI Instrument",
+                      choices = c("Words & Sentences" = "WS", 
+                                  "Words & Gestures" = "WG"),
+                      selected = "WG"),
+          uiOutput("measure"),
+          uiOutput("assoc_control"),
+          # selectizeInput("weighted", "Should graph edges be weighted?",
+          #                choices = c("Yes" = TRUE, 
+          #                            "No" = FALSE),
+          #                selected = TRUE),
+          selectizeInput("group", "Grouping variable",
+                         choices = c("None" = "identity", 
+                                     "CDI category" = "category",
+                                     "Lexical class" = "lexical_class"),
+                         selected = "lexical_class"),
+          sliderInput("age", "Age of Acquisition",
+                      min = 6, 
+                      max = 36, 
+                      value = 15, step = 1),
+          uiOutput('cutoff'),
+          width = 3)),
+      
+      mainPanel(
+        width = 9,
+        tags$style(type = "text/css",
+                   ".shiny-output-error { visibility: hidden; }",
+                   ".shiny-output-error:before { visibility: hidden; }"),
+        conditionalPanel(
+          condition = "output.loaded == 1",
+          #forceNetworkOutput("network")
+           visNetworkOutput("network", height = "600px")
+        )
       )
     )
   )
-))
+)

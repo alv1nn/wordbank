@@ -67,7 +67,7 @@ shinyServer(function(input, output) {
   })
   
   
-  ########## GET MEASURE
+  ########## GET LANGUAGE
   output$language <- renderUI({
     req(input$source) 
     
@@ -210,16 +210,16 @@ shinyServer(function(input, output) {
       
     #### ADD COLORS BASED ON GROUPING VARIABLE
     
-    ## add colors information to the nodes
     if(input$group == "lexical_class") {
-      assoc_nodes <- assoc_nodes %>% left_join(., lex_class_col, by = "group")
+      assoc_nodes <- assoc_nodes %>% 
+        left_join(., lex_class_col, by = "group")
+    
     } else if (input$group == "category") {
-      assoc_nodes <- assoc_nodes %>% left_join(., lex_cat_col, by = "group")
+      assoc_nodes <- assoc_nodes %>% 
+        left_join(., lex_cat_col, by = "group")
     } else {
       assoc_nodes <- assoc_nodes %>% mutate(color = "dodgerblue")
     }
-    
-    print(assoc_nodes)
     
   })
   
@@ -247,7 +247,7 @@ shinyServer(function(input, output) {
       
   ########## FILTER EDGES 
   assoc_edges <- reactive({
-    req(input$weighted)
+    #req(input$weighted)
     req(input$cutoff)
     req(input$source)
     
@@ -259,30 +259,33 @@ shinyServer(function(input, output) {
     if(input$source == "Phon") edges <- filter(edges, width <= (scaling*input$cutoff))
     else edges <- filter(edges, width >= (scaling*input$cutoff)) 
     
-    if (input$weighted == "TRUE") {
-      edges
-    } else {
-      edges %>% select(-width) 
-    }
+    # if (input$weighted == "TRUE") {
+    #   edges
+    # } else {
+    #   edges %>% select(-width) 
+    # }
     
   })
   
+  #### create custom mappings for the legend
   
   lnodes <- reactive({
     req(input$group)
-    ## create custom mappings for the legend
     if(input$group == "lexical_class") {
       nodes_legend <- lex_class_col %>% 
+        filter(group %in% unique(assoc_nodes()$group)) %>% 
         rename(label = group) %>% 
         mutate(shape = "ellipse")
       print(nodes_legend)
     } else if (input$group == "category") {
       nodes_legend <- lex_cat_col %>% 
+        filter(group %in% unique(assoc_nodes()$group)) %>% 
         rename(label = group) %>% 
         mutate(shape = "ellipse")
       
     } else {
       nodes_legend <- lex_cat_col %>%
+        filter(group %in% unique(assoc_nodes()$group)) %>% 
         rename(label = group) %>%
         mutate(color = "dodgerblue",
                shape = "ellipse",
@@ -315,8 +318,9 @@ shinyServer(function(input, output) {
       visNodes(font = list(size = 30), size = 20) %>%
       visOptions(highlightNearest = list(enabled = T, degree = 2, hover = F),
                   selectedBy = "group") %>% 
-      visLegend(width = 0.3, position = "left", 
-                addNodes = lnodes(), useGroups = F)
+      visLegend(width = 0.2, position = "right", 
+                addNodes = lnodes(), useGroups = F, ncol = 1,
+                stepY = 50)
   })
   
   output$loaded <- reactive(1)
