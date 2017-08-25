@@ -16,7 +16,6 @@ shinyUI(
                                #includeMarkdown("docs/description.md"),
                                value = "title",
                                style = "default")),
-    
     sidebarLayout(
       sidebarPanel(
         width = 3,
