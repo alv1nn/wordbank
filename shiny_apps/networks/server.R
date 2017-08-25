@@ -28,8 +28,8 @@ w2v <- read_feather("assocs/w2v.feather")
 aoas <- read_feather("aoas/all_aoas.feather") %>%
   mutate(measure = if_else(measure == "understands", "comprehension", "production"))
 
-
-instruments <- distinct(aoas, language, form)
+measures <- distinct(aoas, language, form, measure)
+instruments <- distinct(measures, language, form)
 #ws_aoas <- read_csv("aoas/eng_ws_production_aoas.csv") 
 #wg_comp_aoas <- read_csv("aoas/eng_wg_production_aoas.csv") 
 #wg_prod_aoas <- read_csv("aoas/eng_wg_comprehension_aoas.csv") 
