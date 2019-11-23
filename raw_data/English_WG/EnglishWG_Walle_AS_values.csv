@@ -1,0 +1,54 @@
+type,value,data_value
+sex,F,F
+sex,M,M
+mom_ed,secondary,High School Diploma
+mom_ed,some secondary,Some High School
+mom_ed,college,College Degree
+mom_ed,graduate,Graduate Degree
+mom_ed,some college,Other: Some college
+combine,not yet,Not yet
+combine,sometimes,Sometimes
+combine,often,Often
+combine,not yet,N/A
+word,understands,1
+word,produces,2
+word,,0
+mom_ed,some college,Some college
+mom_ed,some college,Associates
+mom_ed,graduate,Graduate Degree (both)
+mom_ed,some college,In College
+mom_ed,some secondary,Tradeschool
+mom_ed,some college,CA Credential
+mom_ed,graduate,"College dgree, Graduate Degree"
+mom_ed,graduate,"College Degree, Graduate Degree"
+mom_ed,secondary,"High School Diploma, Other: Cosmo. License"
+mom_ed,college,"College Degree, Other: Teaching Certificate"
+mom_ed,graduate,Graduate Dgree. Other: Master in Journalism
+mom_ed,graduate,Post Grad
+mom_ed,college,"Graduate Degree, No high school"
+mom_ed,college,College Degrees
+mom_ed,college,gradute degree
+mom_ed,graduate,Other: post-grad
+mom_ed,graduate,Graduate
+mom_ed,none,Other: Don't know
+mom_ed,primary,No high school
+mom_ed,graduate,"Graduate Degree, Other: J.D."
+mom_ed,some college,"High School Diploma, Other: in college"
+mom_ed,college,College Degreee
+mom_ed,some secondary,other: certificate trade secondary school
+mom_ed,graduate,gradaute degree
+mom_ed,college,"college degree, other: teaching credential"
+mom_ed,graduate,post-grad
+mom_ed,college,teaching cred
+mom_ed,some college,Technical Training/Degree
+sex,,n/a
+mom_ed,secondary,vocational
+mom_ed,some secondary,trade school
+mom_ed,college,college  degree
+mom_ed,graduate,"high school diploma, graduate degree"
+mom_ed,college,"high school diploma, college degree"
+mom_ed,some college,other: cosmetology license
+mom_ed,primary,no high school
+mom_ed,None,other
+mom_ed,None,n/a
+mom_ed,None,unknown

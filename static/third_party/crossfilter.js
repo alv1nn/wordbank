@@ -2602,7 +2602,7 @@ function crossfilter() {
       callbacks[i](eventName);
     }
   }
-
+  console.log("Arguments", arguments)
   return arguments.length
       ? add(arguments[0])
       : crossfilter;

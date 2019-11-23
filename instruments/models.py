@@ -52,7 +52,5 @@ from schemas.Spanish_European_WG import *
 from schemas.Spanish_European_WS import *
 from schemas.Portuguese_European_WG import *
 from schemas.Portuguese_European_WS import *
-from schemas.Hebrew_WS import *
-from schemas.Hebrew_WS import *
-from schemas.Mandarin_Taiwanese_WS import *
 from schemas.Mandarin_Taiwanese_WG import *
+from schemas.Mandarin_Taiwanese_WS import *

@@ -1,0 +1,20 @@
+type,value,data_value
+sex,F,F
+sex,M,M
+mom_ed,secondary,High School Diploma
+mom_ed,some secondary,Some High School
+mom_ed,college,College Degree
+mom_ed,graduate,Graduate Degree
+mom_ed,none,Other
+mom_ed,none,N/A
+mom_ed,some college,Other: Some college
+combine,not yet,Not yet
+combine,sometimes,Sometimes
+combine,often,Often
+combine,not yet,N/A
+word,produces,1
+word,,0
+mom_ed,some college,Some college
+mom_ed,secondary,Associates
+mom_ed,graduate,Graduate Degree (both)
+mom_ed,college,In College
