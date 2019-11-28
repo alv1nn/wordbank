@@ -4,3 +4,6 @@ sex,F,female
 word,produces,2
 word,understands,1
 word,,0
+starting_to_talk,"not yet",0
+starting_to_talk,"sometimes",1
+starting_to_talk,"often",2

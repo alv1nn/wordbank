@@ -1,10 +1,10 @@
 [
     {
         "name": "Walle",
-        "dataset": "Cheez-it",
+        "dataset": "",
         "instrument_language": "English (American)",
         "instrument_form": "WS",
-        "file": "raw_data/English_WS/EnglishWS_Walle_Cheez-it.csv",
+        "file": "raw_data/English_WS/EnglishWS_Walle.csv",
         "splitcol": false,
         "norming": false,
         "longitudinal": false,
@@ -15,10 +15,10 @@
     },    
     {
         "name": "Walle",
-        "dataset": "AS",
+        "dataset": "",
         "instrument_language": "English (American)",
         "instrument_form": "WG",
-        "file": "raw_data/English_WG/EnglishWG_Walle_AS.csv",
+        "file": "raw_data/English_WG/EnglishWG_Walle.csv",
         "splitcol": false,
         "norming": false,
         "longitudinal": false,
@@ -1082,4 +1082,5 @@
         "license": "CC-BY",
         "citation": "Liu, H. M., & Tsao, F. M. (2010). The standardization and application of Mandarin-Chinese communicative developmental inventory for infants and toddlers. Formosa Journal of Mental Health, (4)23, 503-534. doi: 10.30074/CJMH.201012.0001 \nLiu, H. M., & Chen, Y. (2015). Developmental changes in the content and composition of early expressive vocabulary in Mandarin-speaking infants and toddlers. Bulletin of Educational Psychology, 24(7), 217-242. doi: 10.6251/BEP.20150205"
     }
+    
 ]

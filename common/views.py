@@ -43,7 +43,9 @@ class Publications(View):
 
     def get(self, request):
         #publications = json.loads(open('static/json/publications.json').read())
-        publications = json.loads(urllib2.urlopen(static('json/publications.json')).read())
+        #publications = json.loads(urllib2.urlopen(static('json/publications.json')).read())
+        publications = json.loads(open(settings.STATIC_ROOT + '/json/publications.json').read())
+
         return render(request, 'publications.html', {'publications': publications})
 
 
@@ -106,9 +108,11 @@ class Blog(View):
                     #'author_link': entry.author[0].uri.text
                    } for entry in feed.entry]
 
-        events = json.loads(urllib2.urlopen(static('json/events.json')).read())
+        #events = json.loads(urllib2.urlopen(static('json/events.json')).read())
+        events = json.loads(open(settings.STATIC_ROOT + '/json/events.json').read())
 
-        resources = json.loads(urllib2.urlopen(static('json/resources.json')).read())
+        #resources = json.loads(urllib2.urlopen(static('json/resources.json')).read())
+        resources = json.loads(open(settings.STATIC_ROOT + '/json/resources.json').read())
 
         return render(request, 'blog.html', {'entries': entries, 'events': events, 'resources': resources})
 
