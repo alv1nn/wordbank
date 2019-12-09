@@ -35,9 +35,10 @@ class Command(BaseCommand):
 
             print "    Caching category sizes for", instrument.language, instrument.form
 
-            instrument_model = getattr(instruments.models, '_'.join(instrument.language.split() + [instrument.form]))
+            instrument_language = instrument.language.replace('(','').replace(')','')   # replace added for English (American)
+            instrument_model = getattr(instruments.models, '_'.join(instrument_language.split() + ['_'.join(instrument.form.split())])) # '_'.join for instrument.form added for TEDS Twos
             instrument_table = instrument_model._meta.db_table
-            all_words = ItemInfo.objects.filter(instrument = instrument.pk, type = 'word')
+            all_words = ItemInfo.objects.filter(instrument = instrument.pk, type = 'word', category_id__isnull=False) #isnull condition added for TEDS Twos
             category_words = defaultdict(list)
             for word in all_words:
                 category_words[word.category.id].append(word.item_id)

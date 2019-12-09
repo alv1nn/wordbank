@@ -22,7 +22,7 @@ shinyServer(function(input, output, session) {
 
   output$loaded <- reactive(0)
   outputOptions(output, "loaded", suspendWhenHidden = FALSE)
-
+  
   admins <- get_administration_data(mode = mode, original_ids = TRUE) %>%
     gather(measure, vocab, comprehension, production) %>%
     mutate(identity = "All Data")

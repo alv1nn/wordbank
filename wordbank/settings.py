@@ -4,12 +4,14 @@ import os
 SITE_DIR = (os.path.join(os.path.dirname(__file__), '..')).replace('\\', '/')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEV = os.path.isfile(os.path.join(SITE_DIR, 'dev'))
-DEBUG = True
-if DEV:
-  DEBUG = True
+
+#DEBUG = True
+#if DEV:
+#  DEBUG = True
+DEBUG = bool(os.environ.get('DEBUG', False))
 
 ADMINS = (
-    ('Mika Braginsky', 'mikabr@stanford.edu'),
+    ('Henry Mehta', 'hjsmehta@gmail.com'),
 )
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -24,8 +26,8 @@ if os.environ['DATABASE_NAME']:
         'NAME': os.environ['DATABASE_NAME'],
         'USER': os.environ['DATABASE_USER'],
         'PASSWORD': os.environ['DATABASE_PASSWORD'],
-        'HOST' : 'localhost',
-        'PORT' : '3306'
+        'HOST' : os.environ['DATABASE_HOSTNAME'],
+        'PORT' : os.environ['DATABASE_PORT']
         }
     }
 else :
