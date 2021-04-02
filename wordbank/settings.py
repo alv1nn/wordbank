@@ -81,6 +81,7 @@ USE_TZ = True
 MEDIA_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','media')
 MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
+STATIC_ROOT = 'static'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "wordbank/static"),
 )
