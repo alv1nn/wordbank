@@ -81,18 +81,8 @@ USE_TZ = True
 MEDIA_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','media')
 MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
-STATIC_ROOT = 'static'
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "wordbank/static"),
-)
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-# List of finder classes that know how to find static files in
-# various locations.
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
-)
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'bcoc6k=lvizi-o-ff9p3&ativ06+_$%yjtjh6=obn4$i2gh@g='
