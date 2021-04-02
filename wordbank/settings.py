@@ -2,6 +2,7 @@
 import os
 
 SITE_DIR = (os.path.join(os.path.dirname(__file__), '..')).replace('\\', '/')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEV = os.path.isfile(os.path.join(SITE_DIR, 'dev'))
 DEBUG = True
 if DEV:
@@ -16,17 +17,29 @@ SHINY_SERVER_IP = '52.26.82.213'
 
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'wordbank',                      # Or path to database file if using sqlite3.
-        # The following settings are not used with sqlite3:
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': '',                      # Set to empty string for default.
+if 'DATABASE_NAME' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ['DATABASE_NAME'],
+            'USER': os.environ['DATABASE_USER'],
+            'PASSWORD': os.environ['DATABASE_PASSWORD'],
+            'HOST' : os.environ['DATABASE_HOSTNAME'],
+            'PORT' : os.environ['DATABASE_PORT']
+            }
+        }
+else :
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+            'NAME': 'wordbank',                      # Or path to database file if using sqlite3.
+            # The following settings are not used with sqlite3:
+            'USER': '',
+            'PASSWORD': '',
+            'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+            'PORT': '',                      # Set to empty string for default.
+        }
     }
-}
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -58,35 +71,11 @@ USE_TZ = True
 
 #FILE_UPLOAD_PERMISSIONS = 0644
 
-# Absolute filesystem path to the directory that will hold user-uploaded files.
-# Example: "/var/www/example.com/media/"
-
 MEDIA_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)),'..','media')
-
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash.
-# Examples: "http://example.com/media/", "http://media.example.com/"
 MEDIA_URL = '/media/'
-
-# Absolute path to the directory static files should be collected to.
-# Don't put anything in this directory yourself; store your static files
-# in apps' "static/" subdirectories and in STATICFILES_DIRS.
-# Example: "/var/www/example.com/static/"
-STATIC_ROOT = 'sitestatic'
-
-# URL prefix for static files.
-# Example: "http://example.com/static/", "http://static.example.com/"
-#STATIC_URL = '/static/'
-STATIC_URL = 'http://wordbank.stanford.edu/static/'
-
-# Additional locations of static files
+STATIC_URL = '/static/'
 STATICFILES_DIRS = (
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    'static/',
-    #os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static'),
-    os.path.join(os.path.dirname(__file__), '..', 'static').replace('\\','/'),
+    os.path.join(BASE_DIR, "wordbank/static"),
 )
 
 # List of finder classes that know how to find static files in
@@ -101,21 +90,18 @@ STATICFILES_FINDERS = (
 SECRET_KEY = 'bcoc6k=lvizi-o-ff9p3&ativ06+_$%yjtjh6=obn4$i2gh@g='
 
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
 ROOT_URLCONF = 'wordbank.urls'
 
-# Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'wordbank.wsgi.application'
-
 
 TEMPLATES = [
     {
@@ -127,11 +113,10 @@ TEMPLATES = [
         ],
         'OPTIONS': {
             'context_processors': [
-                # Insert your TEMPLATE_CONTEXT_PROCESSORS here or use this
-                # list if you haven't customized them:
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.i18n',
+                'django.template.context_processors.request',
                 'django.template.context_processors.media',
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
@@ -147,26 +132,21 @@ TEMPLATES = [
 ]
 
 INSTALLED_APPS = (
+    'wordbank',
+    'common',
+    'instruments',
+
+    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
-    'common',
-    'instruments',
-    'django_extensions'
+
+    'django_extensions',
 )
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error when DEBUG=False.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
