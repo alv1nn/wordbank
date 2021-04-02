@@ -85,8 +85,17 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'bcoc6k=lvizi-o-ff9p3&ativ06+_$%yjtjh6=obn4$i2gh@g='
-
+from django.utils.crypto import get_random_string
+def generate_secret_key(fname):
+    chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)'
+    f = open(fname, 'w')
+    f.write("SECRET_KEY = '%s'\n"%get_random_string(50, chars))
+try:
+    from .secret_key import *
+except ImportError:
+    SETTINGS_DIR=os.path.abspath(os.path.dirname(__file__))
+    generate_secret_key(os.path.join(SETTINGS_DIR, 'secret_key.py'))
+    from .secret_key import *
 
 MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
