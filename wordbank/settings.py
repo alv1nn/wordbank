@@ -2,14 +2,14 @@
 import os
 
 #Get AWS HealthChecker IP
-import urllib
+import urllib.request
 def get_ec2_instance_ip():
     """
     Try to obtain the IP address of the current EC2 instance in AWS
     """
     response=None
     try:
-        response = urllib.request.urlopen('http://169.254.169.254/latest/meta-data/local-ipv4')
+        response = urllib.request.urlopen('http://169.254.169.254/latest/meta-data/local-ipv4',timeout=1)
         return response.read()
     except :
         return None
@@ -61,10 +61,7 @@ else :
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = [
-    '54.148.218.13', 
-    '172.31.0.195', 
     '127.0.0.1', 
-    '54.149.152.155',
 	'localhost', 
     'wordbank.stanford.edu',
     '.us-west-2.elasticbeanstalk.com',
