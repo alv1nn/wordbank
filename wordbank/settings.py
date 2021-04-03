@@ -151,7 +151,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_extensions',
-    'ebhealthcheck.apps.EBHealthCheckConfig',
 ]
 
 LOGGING = {
