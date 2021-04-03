@@ -181,4 +181,4 @@ LOGGING = {
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 BLOGGER_API_KEY = os.environ['BLOGGER_API_KEY']
-BLOG_ID = os.environ['BLOGGER_API_KEY']
+BLOG_ID = os.environ['BLOG_ID']
