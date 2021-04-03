@@ -1,23 +1,6 @@
 # Django settings for wordbank project.
 import os
 
-#Get AWS HealthChecker IP
-import urllib.request
-def get_ec2_instance_ip():
-    """
-    Try to obtain the IP address of the current EC2 instance in AWS
-    """
-    response=None
-    try:
-        response = urllib.request.urlopen('http://169.254.169.254/latest/meta-data/local-ipv4',timeout=1)
-        return response.read()
-    except :
-        return None
-    finally:
-        if response:
-            response.close()
-AWS_LOCAL_IP = get_ec2_instance_ip()
-
 SITE_DIR = (os.path.join(os.path.dirname(__file__), '..')).replace('\\', '/')
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEV = os.path.isfile(os.path.join(SITE_DIR, 'dev'))
@@ -65,7 +48,6 @@ ALLOWED_HOSTS = [
 	'localhost', 
     'wordbank.stanford.edu',
     '.us-west-2.elasticbeanstalk.com',
-    AWS_LOCAL_IP
 ]
 
 # Local time zone for this installation. Choices can be found here:
@@ -153,7 +135,7 @@ TEMPLATES = [
     },
 ]
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'wordbank',
     'common',
     'instruments',
@@ -167,7 +149,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'django_extensions',
-)
+    'ebhealthcheck.apps.EBHealthCheckConfig',
+]
 
 LOGGING = {
     'version': 1,
